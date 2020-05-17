@@ -1,0 +1,259 @@
+package android.sucharithavenkatesh.com.citationgenerator;
+
+import android.content.Intent;
+import android.content.res.ColorStateList;
+import android.support.v4.content.ContextCompat;
+import android.support.v4.view.ViewCompat;
+import android.support.v7.app.AppCompatActivity;
+import android.os.Bundle;
+import android.text.InputType;
+import android.view.View;
+import android.view.ViewGroup;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.LinearLayout;
+import android.widget.RadioGroup;
+import android.widget.TextView;
+import android.widget.Toast;
+import android.support.v7.widget.Toolbar;
+
+
+public class BookActivity extends AppCompatActivity {
+
+    int baseOfAuthor = 1;
+    LinearLayout authorContainerEt;
+    Button addButton;
+    Button removeButton;
+    EditText authorFirstEt;
+    EditText authorLastEt;
+    TextView citationHeaderTv;
+    TextView publisherCityAPA;
+    TextView publisherStateAPA;
+    TextView bookVolumeTv;
+    TextView pagesTv;
+    TextView toolbarTV;
+    String citation;
+    String mCitationToolbarTitle;
+    Toolbar mToolbar;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_book);
+
+        Intent citationIntent = getIntent();
+        citation = citationIntent.getStringExtra("citation");
+
+        mToolbar = findViewById(R.id.book_toolbar);
+        mToolbar.setNavigationIcon(getResources().getDrawable(R.drawable.ic_arrow_back_white_24dp));
+        mToolbar.setNavigationOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                onBackPressed();
+            }
+        });
+
+        mCitationToolbarTitle = "Book" + "\u0020" + "-" + "\u0020" + citation;
+        toolbarTV = findViewById(R.id.book_toolbar_title);
+        toolbarTV.setText(mCitationToolbarTitle);
+        toolbarTV.setSelected(true);
+
+        authorFirstEt = findViewById(R.id.book_author_first_tv);
+        authorLastEt = findViewById(R.id.book_author_last_tv);
+        citationHeaderTv = findViewById(R.id.book_header_tv);
+        authorContainerEt = findViewById(R.id.book_author_container_ll);
+
+        // Add button functionality
+        addButton = findViewById(R.id.book_add_button);
+        addButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                addAuthor();
+                String text = Integer.toString(baseOfAuthor);
+                Toast.makeText(BookActivity.this, text, Toast.LENGTH_SHORT).show();
+            }
+        });
+
+        // Remove button functionality
+        removeButton = findViewById(R.id.book_remove_button);
+        removeButton.setEnabled(false);
+        removeButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (baseOfAuthor >= 2) {
+                    removeButton.setEnabled(true);
+                    removeAuthor();
+                    String text = Integer.toString(baseOfAuthor);
+                    Toast.makeText(BookActivity.this, text, Toast.LENGTH_SHORT).show();
+                } else {
+                    removeButton.setEnabled(false);
+                    Toast.makeText(BookActivity.this, "Can't remove default author", Toast.LENGTH_SHORT).show();
+                }
+            }
+        });
+
+
+        // For APA
+        publisherCityAPA = findViewById(R.id.book_city_apa_tv);
+        publisherStateAPA = findViewById(R.id.book_state_apa_tv);
+        publisherCityAPA.setVisibility(View.GONE);
+        publisherStateAPA.setVisibility(View.GONE);
+
+        // For Harvard
+        bookVolumeTv = findViewById(R.id.book_volume_tv);
+        pagesTv = findViewById(R.id.book_pages_tv);
+
+        radioGroupListener();
+
+        if (citation.equals("APA")) {
+            publisherCityAPA.setVisibility(View.VISIBLE);
+            publisherStateAPA.setVisibility(View.VISIBLE);
+        }
+        if (citation.equals("Harvard")) {
+            publisherStateAPA.setVisibility(View.GONE);
+            bookVolumeTv.setVisibility(View.GONE);
+            pagesTv.setVisibility(View.GONE);
+        }
+    }
+
+    /**
+     * Method to add a new author field to the list keeping the color coding and dimensions as
+     * close as possible.
+     */
+    public void addAuthor() {
+        authorFirstEt = new EditText(getApplicationContext());
+        authorLastEt = new EditText(getApplicationContext());
+        baseOfAuthor += 1;
+        authorContainerEt.addView(authorFirstEt, baseOfAuthor);
+        baseOfAuthor += 1;
+        authorContainerEt.addView(authorLastEt, baseOfAuthor);
+        authorFirstEt.setHint("First Name");
+        authorLastEt.setHint("Last Name");
+
+        // To set the dimensions of the EditText and refresh the layout
+        LinearLayout.LayoutParams layoutParams = new LinearLayout.LayoutParams
+                (LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+        layoutParams.setMargins(24, 0, 24, 0);
+        authorFirstEt.setLayoutParams(layoutParams);
+        authorLastEt.setLayoutParams(layoutParams);
+        authorFirstEt.getLayoutParams().width = ViewGroup.LayoutParams.MATCH_PARENT;
+        authorLastEt.getLayoutParams().width = ViewGroup.LayoutParams.MATCH_PARENT;
+        authorFirstEt.setInputType(InputType.TYPE_TEXT_FLAG_CAP_WORDS);
+        authorLastEt.setInputType(InputType.TYPE_TEXT_FLAG_CAP_WORDS);
+        authorFirstEt.requestLayout();
+        authorLastEt.requestLayout();
+
+        // To set the color of the EditText field
+        authorFirstEt.setTextColor(ContextCompat.getColor(BookActivity.this, R.color.colorBackground));
+        authorFirstEt.setHintTextColor(ContextCompat.getColor(BookActivity.this, R.color.editTextColorHint));
+        ColorStateList colorStateList = ColorStateList.valueOf(getResources().getColor(R.color.colorBackground));
+        ViewCompat.setBackgroundTintList(authorFirstEt, colorStateList);
+        removeButton.setEnabled(true);
+
+        authorLastEt.setTextColor(ContextCompat.getColor(BookActivity.this, R.color.colorBackground));
+        authorLastEt.setHintTextColor(ContextCompat.getColor(BookActivity.this, R.color.editTextColorHint));
+        ColorStateList lastColorStateList = ColorStateList.valueOf(getResources().getColor(R.color.colorBackground));
+        ViewCompat.setBackgroundTintList(authorLastEt, lastColorStateList);
+        removeButton.setEnabled(true);
+    }
+
+    /**
+     * Method to remove the author from the list
+     */
+    public void removeAuthor() {
+        authorContainerEt.removeViewAt(baseOfAuthor);
+        baseOfAuthor -= 1;
+        authorContainerEt.removeViewAt(baseOfAuthor);
+        baseOfAuthor -= 1;
+    }
+
+
+    //
+//    private class GenericTextWatcher implements TextWatcher{
+//
+//        private View view;
+//        private GenericTextWatcher(View view) {
+//            this.view = view;
+//        }
+//
+//        public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {}
+//        public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+//            String text = charSequence.toString();
+//            String finalText = null;
+//            switch(view.getId()){
+//                case R.id.book_author_first_tv:
+//                    finalText = text + ", ";
+////                    citationHeaderTv.setText(finalText);
+//                    break;
+//                case R.id.book_author_last_tv:
+//                    finalText = text + ". ";
+////                    citationHeaderTv.setText(finalText);
+//                    break;
+//
+////                case R.id.phone:
+////                    model.setPhone(text);
+////                    break;
+//            }
+//            citationHeaderTv.setText(finalText);
+//        }
+//
+//        public void afterTextChanged(Editable editable) {
+//        }
+//    }
+
+    /**
+     * Method to change the checked state of radio button which was selected in the main activity
+     */
+    public void radioGroupListener() {
+        RadioGroup citationRadioGroup = findViewById(R.id.book_radioGroup);
+
+        switch (citation) {
+            case "MLA":
+                citationRadioGroup.check(R.id.book_mla);
+                break;
+            case "APA":
+                citationRadioGroup.check(R.id.book_apa);
+                break;
+            case "Harvard":
+                citationRadioGroup.check(R.id.book_harvard);
+                break;
+        }
+
+        citationRadioGroup.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(RadioGroup group, int checkedId) {
+                switch (checkedId) {
+                    case R.id.book_mla:
+                        citation = "MLA";
+                        publisherCityAPA.setVisibility(View.GONE);
+                        publisherStateAPA.setVisibility(View.GONE);
+                        bookVolumeTv.setVisibility(View.VISIBLE);
+                        pagesTv.setVisibility(View.VISIBLE);
+                        break;
+                    case R.id.book_apa:
+                        citation = "APA";
+                        publisherCityAPA.setVisibility(View.VISIBLE);
+                        publisherStateAPA.setVisibility(View.VISIBLE);
+                        bookVolumeTv.setVisibility(View.VISIBLE);
+                        pagesTv.setVisibility(View.VISIBLE);
+                        break;
+                    case R.id.book_harvard:
+                        citation = "Harvard";
+                        publisherStateAPA.setVisibility(View.GONE);
+                        publisherCityAPA.setVisibility(View.GONE);
+                        bookVolumeTv.setVisibility(View.GONE);
+                        pagesTv.setVisibility(View.GONE);
+                        break;
+                }
+                //apply animation
+                Animation fade1 = AnimationUtils.loadAnimation(BookActivity.this, R.anim.fade);
+                toolbarTV.startAnimation(fade1);
+                mCitationToolbarTitle = "Book" + "\u0020" + "-" + "\u0020" + citation;
+                toolbarTV.setText(mCitationToolbarTitle);
+            }
+        });
+    }
+
+}
